@@ -95,7 +95,6 @@ class Brain:
             'paras': {
                 'p_start': p_start,
                 'l_drift': l_drift,
-                'r_left': b,
                 'r_right': b}}
         gun.append(drift)
         self.gun = gun
