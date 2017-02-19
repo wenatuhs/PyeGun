@@ -106,20 +106,17 @@ def gen_fullcell(paras, title='Fullcell'):
 def gen_drift(paras, title='Drift', final=True):
     p_start = paras['p_start']
     l_drift = paras['l_drift']
-    r_left = paras['r_left']
     r_right = paras['r_right']
     p_end = p_start+l_drift
 
     if final:
-        drift = ''';{5}
+        drift = ''';{3}
 &PO X={0:.4f} Y={1:.4f}&
-&PO X={2:.4f} Y={3:.4f}&
-&PO X={2:.4f} Y={4:.4f}&
-&PO X={4:.4f} Y={4:.4f}&'''.format(p_start, r_left, p_end, r_right, 0, title)
+&PO X={0:.4f} Y={2:.4f}&
+&PO X={2:.4f} Y={2:.4f}&'''.format(p_end, r_right, 0, title)
     else:
-        drift = ''';{4}
-&PO X={0:.4f} Y={1:.4f}&
-&PO X={2:.4f} Y={3:.4f}&'''.format(p_start, r_left, p_end, r_right, title)
+        drift = ''';{2}
+&PO X={0:.4f} Y={1:.4f}&'''.format(p_end, r_right, title)
     
     return drift
 
