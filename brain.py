@@ -104,11 +104,11 @@ class Brain:
         generator = SFGenerator(self)
         generator.gen_af()
         generator.gen_sf7()
-        # core = SFCore(generator)
-        # core.run()
-        # analyzer = Analyzer(core)
-        # analyzer.analyze()
-        # analyzer.plot_efield(True, True)
+        core = SFCore(generator)
+        core.run()
+        analyzer = Analyzer(core)
+        analyzer.analyze()
+        analyzer.plot_efield(True, True)
     
     def _cal_jacobian(self):
         None

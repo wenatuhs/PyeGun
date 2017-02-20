@@ -142,7 +142,8 @@ class Analyzer:
 
         fig, ax = plt.subplots(1, 1)
         ax.set(xlim=(z[0], z[-1]), xlabel='z (cm)', ylabel='Ez (MV/m)')
-        comment = '{0}\nfreq = {1:.2f} MHz\nflatness = {2}'.format(sim, freq, flat)
+        flatlist = '\n'.join(['p{0}/p0 = {1:.2f}'.format(i+1, flat[i]) for i in range(len(flat))])
+        comment = '{0}\nfreq = {1:.2f} MHz\n{2}'.format(sim, freq, flatlist)
         ax.plot(z, Ez, label=comment)
         ax.legend(loc='upper left', bbox_to_anchor=(1, 1), borderaxespad=0)
         fig.tight_layout()
