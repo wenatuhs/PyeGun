@@ -3,7 +3,6 @@ from sfgenerator import SFGenerator
 from sfcore import SFCore
 from analyzer import Analyzer
 from utils.physicshelper import freq2lamb
-from utils.roundup import float4
 from utils.newton import seek_root
 
 class Brain:
@@ -116,7 +115,7 @@ class Brain:
 
     def _init_guess(self):
         lamb = freq2lamb(self.freq)*1e-1  # mm to cm
-        a = float4(2.405/(2*np.pi)*lamb)
+        a = 2.405/(2*np.pi)*lamb
         cnum = int(self.cell_num)+1
         x = [a]*cnum
         return x
@@ -133,7 +132,6 @@ class Brain:
             for i in range(len(x)):
                 _x = np.copy(x)
                 _x[i] += step
-                _x = float4(_x)
                 _y = self.test_gun(_x)
                 mat.append((_y-y)/step)
             mat = np.array(mat).transpose()
