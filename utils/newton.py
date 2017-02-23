@@ -37,7 +37,7 @@ def seek_root(x, jacob, options=None):
 
         imat = np.linalg.inv(mat)
         dx = np.dot(y, imat.transpose())
-        _x = float4(x+eta*dx)  # next guess
+        _x = float4(x-eta*dx)  # next guess
 
         if np.array_equal(_x, x):
             print('The local best solution has been achieved in cycle {}, \
