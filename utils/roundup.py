@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 def uniform4(m, M):
     return random.randint(np.floor(m*1e4), np.ceil(M*1e4))/10000

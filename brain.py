@@ -3,6 +3,8 @@ from sfgenerator import SFGenerator
 from sfcore import SFCore
 from analyzer import Analyzer
 from utils.physicshelper import freq2lamb
+from utils.roundup import float4
+from utils.newton import seek_root
 
 class Brain:
     """ e-Gun CPU.
@@ -26,7 +28,7 @@ class Brain:
 
         return xdri, ydri
 
-    def make_gun(self, vars=[]):
+    def make_gun(self, x):
         freq = self.freq
         cell_num = self.cell_num
         fc_num = int(cell_num)
@@ -39,8 +41,6 @@ class Brain:
         l_full = lamb/2
         l_half = hc_ratio*l_full
         l_drift = 1.2*l_full  # gun exit drift distance
-        if not vars:
-            vars = [a]*(fc_num+1)
         # Simulation settings
         name = self.name
         xdri, ydri = self._cal_drive_point()
@@ -68,7 +68,7 @@ class Brain:
             'type': 'halfcell',
             'paras': {
                 'l_half': l_half,
-                'r_half': vars[0],
+                'r_half': x[0],
                 'c_half': r,
                 'j_half': r,
                 'r_tube': b}}
@@ -81,7 +81,7 @@ class Brain:
                 'paras': {
                     'p_start': p_start,
                     'l_full': l_full,
-                    'r_full': vars[i+1],
+                    'r_full': x[i+1],
                     'c_full': r,
                     'j_full_l': r,
                     'j_full_r': r,
@@ -99,8 +99,8 @@ class Brain:
         gun.append(drift)
         self.gun = gun
 
-    def test_gun(self, vars=[]):
-        self.make_gun(vars)
+    def test_gun(self, x):
+        self.make_gun(x)
         generator = SFGenerator(self)
         generator.gen_af()
         generator.gen_sf7()
@@ -108,66 +108,48 @@ class Brain:
         core.run()
         analyzer = Analyzer(core)
         analyzer.analyze()
-        analyzer.plot_efield(True, True)
-    
-    def _cal_jacobian(self):
-        None
-        # try:
-        #     len(steps)
-        # except:
-        #     steps = steps*np.ones(len(origin))
-            
-        # mat = []
-        # data = evaluate(origin, paras, root, '001', 1, 0, 0, 0, **kwargs)
-        # delta = np.array(target)-data
-        # for i in range(len(origin)):
-        #     _origin = np.copy(origin)
-        #     _origin[i] += steps[i]
-        #     _origin = float4(_origin)
-        #     _data = evaluate(_origin, paras, root, '001', 1, 0, 0, 0, **kwargs)
-        #     mat.append((_data-data)/steps[i])
-        # mat = np.array(mat).transpose()
-        
-        # return mat, delta
+        # analyzer.plot_efield(False, True)
+        freq = analyzer.info['f']/self.freq-1
+        flat = analyzer.info['flat']-1
+        y = np.append(freq, flat)
+        return y
+
+    def _init_guess(self):
+        lamb = freq2lamb(self.freq)*1e-1  # mm to cm
+        a = float4(2.405/(2*np.pi)*lamb)
+        cnum = int(self.cell_num)+1
+        x = [a]*cnum
+        return x
 
     def seek(self):
-        None
-        # if origin is None:
-        #     origin = np.array([paras['r_half'], paras['r_full'], paras['r_hom']])
+        try:
+            step = self.options['step']
+        except KeyError:
+            step = 1e-3
         
-        # steps = maxstep
-        # mat, delta = cal_matrix(origin, steps, target, paras, root, **kwargs)
-        # cycle = 0
-        # print('Cycle {0}: delta={1}'.format(cycle, list(delta)))
-        
-        # while np.sum(np.abs(delta) > error) and (cycle <= maxcycles):
-        #     imat = np.linalg.inv(mat)
-        #     delta_x = np.dot(delta, imat.transpose())
-            
-        #     _origin = float4(origin+delta_x)
-        #     if np.array_equal(_origin, origin):
-        #         _data = evaluate(origin, paras, root, '001', 1, 1, 1, 1, **kwargs)
-        #         print('The local best solution has been achieved in cycle {}, however it does not satisfy the accuracy requirements.'.format(cycle))
-                
-        #         return origin, delta
-        #     else:
-        #         origin = _origin
-                
-        #     dis = delta_x/2
-        #     ones = np.ones(len(dis))
-        #     steps = np.max([np.min([dis, maxstep*ones], 0), minstep*ones], 0)
-        #     mat, delta = cal_matrix(origin, steps, target, paras, root, **kwargs)
-        #     cycle += 1
-        #     print('Cycle {0}: delta={1}'.format(cycle, list(delta)))
-        
-        # _data = evaluate(origin, paras, root, '001', 1, 1, 1, 1, **kwargs)
-        # if cycle > maxcycles and (np.sum(np.abs(delta) > error)):
-        #     print('Sorry, can not find solutions with enough accuracy in {} cycles!'.format(maxcycles))
-        # else:
-        #     print('Suceed! Find good solutions in {} cylce(s)!'.format(cycle))
-        
-        # return origin, delta
+        def jacob(x):
+            y = self.test_gun(x)
+            mat = []
+            for i in range(len(x)):
+                _x = np.copy(x)
+                _x[i] += step
+                _x = float4(_x)
+                _y = self.test_gun(_x)
+                mat.append((_y-y)/step)
+            mat = np.array(mat).transpose()
+            return y, mat
+
+        x = self._init_guess()
+        seek_root(x, jacob, self.options)
 
 if __name__ == "__main__":
-    brain = Brain(11424, 5.6)
-    brain.test_gun()
+    options = {
+        'err': 1e-3,
+        'max_cycle': 100,
+        'eta': 0.5,
+        'step': 1e-3
+    }
+    brain = Brain(11424, 3.6, '3P6GUN', options)
+    brain.seek()
+    # x = brain._init_guess()
+    # brain.test_gun(x)
