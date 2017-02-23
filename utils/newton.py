@@ -1,3 +1,4 @@
+import numpy as np
 from utils.roundup import float4
 
 def seek_root(x, jacob, options=None):
